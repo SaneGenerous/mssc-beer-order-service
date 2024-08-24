@@ -14,7 +14,10 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class BeerOrderMangerImpl implements BeerOrderManger {
+public class BeerOrderManagerImpl implements BeerOrderManager {
+
+    public static final String ORDER_ID_HEADER = "BEER_ORDER_ID";
+
     private final StateMachineFactory<BeerOrderStatusEnum, BeerOrderEventEnum> stateMachineFactory;
     private final BeerOrderRepository beerOrderRepository;
 
