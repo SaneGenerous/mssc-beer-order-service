@@ -13,8 +13,8 @@ import java.util.UUID;
 @ConfigurationProperties(prefix = "sfg.brewery", ignoreUnknownFields = false)
 @Service
 public class BeerServiceImpl implements BeerService {
-    private static final String BEER_PATH_V1 = "/api/v1/beer/";
-    private static final String BEER_UPC_PATH_V1 = "/api/v1/beerUpc/";
+    public static final String BEER_PATH_V1 = "/api/v1/beer/";
+    public static final String BEER_UPC_PATH_V1 = "/api/v1/beerUpc/";
     private final RestTemplate restTemplate;
     @Setter
     private String beerServiceHost;
