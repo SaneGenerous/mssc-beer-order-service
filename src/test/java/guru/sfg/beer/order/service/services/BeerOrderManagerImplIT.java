@@ -28,6 +28,8 @@ import static com.github.jenspiegsa.wiremockextension.ManagedWireMockServer.with
 import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
+import static org.awaitility.Awaitility.await;
+import static org.junit.Assert.assertEquals;
 
 @ExtendWith(WireMockExtension.class)
 @SpringBootTest
@@ -78,8 +80,17 @@ public class BeerOrderManagerImplIT {
         BeerOrder beerOrder = createBeerOrder();
         BeerOrder savedBeerOrder = beerOrderManager.newBeerOrder(beerOrder);
 
+        await().untilAsserted(() -> {
+            BeerOrder foundOrder = beerOrderRepository.findById(beerOrder.getId()).get();
+
+            // todo - ALLOCATED status
+            Assertions.assertEquals(BeerOrderStatusEnum.ALLOCATION_PENDING, foundOrder.getOrderStatus());
+        });
+
+        BeerOrder savedBeerOrder2 = beerOrderRepository.findById(savedBeerOrder.getId()).get();
+
         Assertions.assertNotNull(savedBeerOrder);
-        Assertions.assertEquals(BeerOrderStatusEnum.ALLOCATED, savedBeerOrder.getOrderStatus());
+        Assertions.assertEquals(BeerOrderStatusEnum.ALLOCATED, savedBeerOrder2.getOrderStatus());
     }
 
     public BeerOrder createBeerOrder(){
