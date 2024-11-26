@@ -53,6 +53,9 @@ public class BeerOrderManagerImpl implements BeerOrderManager {
             if (isValid) {
                 sendBeerOrderEvent(beerOrder, BeerOrderEventEnum.VALIDATION_PASSED);
 
+                // wait  for status change
+                awaitForStatus(beerOrderId, BeerOrderStatusEnum.VALIDATED);
+
                 BeerOrder validatedBeerOrder = beerOrderRepository.findById(beerOrderId).get();
 
                 sendBeerOrderEvent(validatedBeerOrder, BeerOrderEventEnum.ALLOCATE_ORDER);
@@ -71,7 +74,7 @@ public class BeerOrderManagerImpl implements BeerOrderManager {
             sendBeerOrderEvent(beerOrder, BeerOrderEventEnum.ALLOCATION_SUCCESS);
             awaitForStatus(beerOrder.getId(), BeerOrderStatusEnum.ALLOCATED);
             updateAllocatedQty(beerOrderDto);
-        }, () -> log.error("Order Id Not Found: " + beerOrderDto.getId() ));
+        }, () -> log.error("Order Id Not Found: {}", beerOrderDto.getId() ));
     }
 
     @Override
@@ -80,7 +83,7 @@ public class BeerOrderManagerImpl implements BeerOrderManager {
 
         beerOrderOptional.ifPresentOrElse(beerOrder -> {
             sendBeerOrderEvent(beerOrder, BeerOrderEventEnum.ALLOCATION_NO_INVENTORY);
-
+            awaitForStatus(beerOrder.getId(), BeerOrderStatusEnum.PENDING_INVENTORY);
             updateAllocatedQty(beerOrderDto);
         }, () -> log.error(" Order Id Not Found: {}", beerOrderDto.getId()));
     }
