@@ -16,6 +16,7 @@ import org.springframework.statemachine.support.DefaultStateMachineContext;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.swing.text.html.Option;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -49,7 +50,7 @@ public class BeerOrderManagerImpl implements BeerOrderManager {
     public void processValidationResult(UUID beerOrderId, Boolean isValid) {
         log.debug("Process Validation Result for beerOrderId: {} Valid? {}", beerOrderId, isValid);
         Optional <BeerOrder> beerOrderOptional = beerOrderRepository.findById(beerOrderId);
-        beerOrderOptional.ifPresent(beerOrder -> {
+        beerOrderOptional.ifPresentOrElse(beerOrder -> {
             if (isValid) {
                 sendBeerOrderEvent(beerOrder, BeerOrderEventEnum.VALIDATION_PASSED);
 
@@ -59,7 +60,7 @@ public class BeerOrderManagerImpl implements BeerOrderManager {
             } else {
                 sendBeerOrderEvent(beerOrder, BeerOrderEventEnum.VALIDATION_FAILED);
             }
-        }, () -> log.error("Order Not Found. Id: {}", beerOrderId));
+        }, () -> log.error("Beer Order Id Not Found: {}", beerOrderId));
 
     }
 
@@ -75,8 +76,14 @@ public class BeerOrderManagerImpl implements BeerOrderManager {
     }
 
     @Override
-    public void beerOrderAllocationPendingInventory(BeerOrderDto beerOrder) {
+    public void beerOrderAllocationPendingInventory(BeerOrderDto beerOrderDto) {
+        Optional<BeerOrder> beerOrderOptional = beerOrderRepository.findById(beerOrderDto.getId());
 
+        beerOrderOptional.ifPresentOrElse(beerOrder -> {
+            sendBeerOrderEvent(beerOrder, BeerOrderEventEnum.ALLOCATION_NO_INVENTORY);
+
+            updateAllocatedQty(beerOrderDto);
+        }, () -> log.error(" Order Id Not Found: {}", beerOrderDto.getId()));
     }
 
     private void updateAllocatedQty(BeerOrderDto beerOrderDto) {
@@ -86,13 +93,13 @@ public class BeerOrderManagerImpl implements BeerOrderManager {
             allocatedOrder.getBeerOrderLines().forEach(beerOrderLine -> {
                 beerOrderDto.getBeerOrderLines().forEach(beerOrderLineDto -> {
                     if(beerOrderLine.getId() .equals(beerOrderLineDto.getId())){
-                        beerOrderLine.setQuantityAllocated(beerOrderLineDto.getQuatityAllocated());
+                        beerOrderLine.setQuantityAllocated(beerOrderLineDto.getQuantityAllocated());
                     }
                 });
             });
 
             beerOrderRepository.saveAndFlush(allocatedOrder);
-        }, () -> log.error("Order Not Found. Id: " + beerOrderDto.getId()));
+        }, () -> log.error("Order Not Found. Id: {}", beerOrderDto.getId()));
     }
 
     @Override
