@@ -139,8 +139,12 @@ public class BeerOrderManagerImplIT {
         beerOrderManager.beerOrderPickedUp(savedBeerOrder.getId());
 
         await().untilAsserted(() -> {
-
+            BeerOrder foundOrder = beerOrderRepository.findById(beerOrder.getId()).get();
+            Assertions.assertEquals(BeerOrderStatusEnum.PICKED_UP, foundOrder.getOrderStatus());
         });
+
+        BeerOrder pickedUpOrder = beerOrderRepository.findById(savedBeerOrder.getId()).get();
+        Assertions.assertEquals(BeerOrderStatusEnum.PICKED_UP, pickedUpOrder.getOrderStatus());
     }
 
     public BeerOrder createBeerOrder(){
